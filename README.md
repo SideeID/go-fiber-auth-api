@@ -80,7 +80,6 @@ go-fiber-auth-api/
 │       └── mongodb.go         # Koneksi MongoDB
 ├── Dockerfile                 # Docker configuration
 ├── docker-compose.yml         # Docker Compose setup
-├── deploy.sh                  # Deployment script
 ├── .env                       # Environment variables
 ├── go.mod                     # Go modules
 └── go.sum                     # Go dependencies
