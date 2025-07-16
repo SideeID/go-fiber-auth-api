@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"ujikom-backend/internal/config"
 	"ujikom-backend/internal/controllers"
 	"ujikom-backend/internal/middleware"
 
@@ -9,10 +10,14 @@ import (
 )
 
 func Setup(app *fiber.App, db *mongo.Database) {
+	cfg := config.Load()
 	authController := controllers.NewAuthController(db)
 	userController := controllers.NewUserController(db)
+	attendanceController := controllers.NewAttendanceController(db, cfg)
 
 	api := app.Group("/api/v1")
+
+	api.Use(middleware.AdminNetworkOverrideMiddleware())
 
 	api.Get("/health", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
@@ -39,6 +44,8 @@ func Setup(app *fiber.App, db *mongo.Database) {
 
 	protected := api.Group("/user")
 	protected.Use(middleware.AuthMiddleware(db))
+	protected.Use(middleware.NetworkSecurityMiddleware())
+	protected.Use(middleware.NetworkInfoMiddleware())
 	
 	protected.Get("/profile", userController.GetProfile)
 	protected.Put("/profile", userController.UpdateProfile)
@@ -47,6 +54,20 @@ func Setup(app *fiber.App, db *mongo.Database) {
 	
 	protected.Post("/logout", authController.Logout)
 	protected.Post("/refresh-token", authController.RefreshToken)
+
+	attendance := api.Group("/attendance")
+	attendance.Use(middleware.AuthMiddleware(db))
+	attendance.Use(middleware.NetworkSecurityMiddleware())
+	attendance.Use(middleware.NetworkInfoMiddleware())
+	attendance.Use(middleware.SecurityHeadersMiddleware())
+	attendance.Use(middleware.DeviceValidationMiddleware())
+	attendance.Use(middleware.LocationValidationMiddleware())
+	
+	attendance.Post("/checkin", attendanceController.CheckIn)
+	attendance.Post("/checkout", attendanceController.CheckOut)
+	attendance.Get("/today", attendanceController.GetTodayAttendance)
+	attendance.Get("/history", attendanceController.GetAttendanceHistory)
+	attendance.Get("/stats", attendanceController.GetAttendanceStats)
 
 	testing := api.Group("/testing")
 	testing.Use(middleware.OptionalAuthMiddleware(db))
@@ -70,6 +91,13 @@ func Setup(app *fiber.App, db *mongo.Database) {
 					"POST /api/v1/user/deactivate",
 					"POST /api/v1/user/logout",
 					"POST /api/v1/user/refresh-token",
+				},
+				"attendance": []string{
+					"POST /api/v1/attendance/checkin",
+					"POST /api/v1/attendance/checkout",
+					"GET /api/v1/attendance/today",
+					"GET /api/v1/attendance/history",
+					"GET /api/v1/attendance/stats",
 				},
 				"testing": []string{
 					"GET /api/v1/testing/users",
