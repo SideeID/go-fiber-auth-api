@@ -41,8 +41,15 @@ func (ac *AuthController) Register(c *fiber.Ctx) error {
 
 	collection := ac.db.Collection("users")
 	
+	// Check if NIS already exists
+	var existingNIS models.User
+	err := collection.FindOne(context.Background(), bson.M{"nis": req.NIS}).Decode(&existingNIS)
+	if err == nil {
+		return utils.ErrorResponse(c, fiber.StatusConflict, "NIS already registered")
+	}
+	
 	var existingUser models.User
-	err := collection.FindOne(context.Background(), bson.M{"email": req.Email}).Decode(&existingUser)
+	err = collection.FindOne(context.Background(), bson.M{"email": req.Email}).Decode(&existingUser)
 	if err == nil {
 		return utils.ErrorResponse(c, fiber.StatusConflict, "Email already registered")
 	}
@@ -55,7 +62,10 @@ func (ac *AuthController) Register(c *fiber.Ctx) error {
 
 	now := time.Now().UTC()
 	user := models.User{
+		NIS:       req.NIS,
 		Name:      req.Name,
+		Kelas:     req.Kelas,
+		Jurusan:   req.Jurusan,
 		Email:     req.Email,
 		Password:  string(hashedPassword),
 		Phone:     req.Phone,
