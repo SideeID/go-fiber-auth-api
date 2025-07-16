@@ -1,35 +1,59 @@
 # Backend API
 
-> **REST API pembelajaran Go dengan Fiber Framework dan MongoDB Atlas**
+> **REST API untuk aplikasi E-Presensi siswa SMK dengan Go, Fiber Framework dan MongoDB Atlas**
 
-Sebuah project pembelajaran untuk memahami pengembangan REST API menggunakan Go (Golang) dengan Fiber web framework dan MongoDB sebagai database. Project ini dibuat sebagai bagian dari proses belajar dan eksplorasi teknologi backend modern.
+Sebuah REST API untuk sistem presensi siswa SMK yang menggunakan teknologi GPS untuk validasi lokasi. Project ini mengimplementasikan sistem absensi modern dengan fitur keamanan mobile dan validasi lokasi berbasis GPS.
 
 ## Deskripsi Project
 
-REST API sederhana yang menyediakan sistem autentikasi dan manajemen user. Project ini dibuat untuk mempelajari:
+REST API untuk sistem E-Presensi siswa SMK yang menyediakan:
+
+- **Sistem Autentikasi Siswa** - Registrasi dan login dengan data siswa (NIS, Kelas, Jurusan)
+- **Absensi Berbasis GPS** - Check-in/out dengan validasi lokasi
+- **Validasi Lokasi Real-time** - Hanya bisa absen dalam radius sekolah
+- **Keamanan Mobile** - Security untuk aplikasi mobile
+- **Riwayat Kehadiran** - History dan statistik kehadiran siswa
+
+Teknologi yang dipelajari:
 
 - **Go (Golang)** - Bahasa pemrograman utama
 - **Fiber Framework** - Web framework yang cepat dan minimalis
 - **MongoDB Atlas** - Database NoSQL cloud
 - **JWT Authentication** - Sistem autentikasi berbasis token
+- **GPS Navigation** - Validasi lokasi dengan Haversine formula
+- **Mobile Security** - Implementasi keamanan perangkat mobile
 - **Docker** - Containerization dan deployment
-- **Security Best Practices** - Implementasi keamanan dasar
 
 ## Fitur
 
 ### Public Endpoints
 
 - **Health Check** - Status kesehatan API
-- **User Registration** - Pendaftaran user baru
+- **User Registration** - Pendaftaran siswa baru (NIS, Kelas, Jurusan)
 - **User Login** - Masuk dengan email dan password
 - **API Documentation** - Dokumentasi endpoint yang tersedia
 
 ### Protected Endpoints (Memerlukan JWT Token)
 
-- **User Profile** - Melihat dan mengubah profil user
+- **User Profile** - Melihat dan mengubah profil siswa
 - **Change Password** - Mengganti password
 - **Account Deactivation** - Menonaktifkan akun
 - **Logout & Token Refresh** - Manajemen sesi
+
+### Attendance Endpoints (GPS Required)
+
+- **Check-in** - Absen masuk dengan validasi GPS
+- **Check-out** - Absen keluar dengan validasi GPS
+- **Today's Attendance** - Lihat absensi hari ini
+- **Attendance History** - Riwayat kehadiran dengan pagination
+- **Attendance Stats** - Statistik kehadiran (hadir, terlambat, tidak hadir)
+
+### Security Features
+
+- **GPS Location Validation** - Validasi lokasi dalam radius sekolah
+- **Mobile Device Security** - Keamanan untuk aplikasi mobile
+- **Haversine Distance Calculation** - Perhitungan jarak GPS yang akurat
+- **Indonesia Territory Validation** - Validasi lokasi dalam wilayah Indonesia
 
 ### Testing Endpoints
 
@@ -55,23 +79,28 @@ go-fiber-auth-api/
 │   └── main.go                 # Entry point aplikasi
 ├── internal/
 │   ├── config/
-│   │   └── config.go          # Konfigurasi aplikasi
+│   │   └── config.go          # Konfigurasi aplikasi & GPS
 │   ├── controllers/
 │   │   ├── auth.go            # Controller autentikasi
+│   │   ├── attendance.go      # Controller absensi GPS
 │   │   ├── health.go          # Controller health check
 │   │   └── user.go            # Controller user management
 │   ├── middleware/
-│   │   └── auth.go            # Middleware JWT
+│   │   ├── auth.go            # Middleware JWT
+│   │   └── location.go        # Middleware validasi GPS
 │   ├── models/
+│   │   ├── attendance.go      # Model absensi dan lokasi
 │   │   └── user.go            # Model dan struct user
 │   ├── routes/
 │   │   └── routes.go          # Definisi routing
 │   ├── services/
+│   │   ├── attendance.go      # Service absensi GPS
 │   │   ├── auth.go            # Service autentikasi
 │   │   └── user.go            # Service user management
 │   └── utils/
 │       ├── hash.go            # Utility hashing
 │       ├── jwt.go             # Utility JWT
+│       ├── mobile.go          # Utility GPS & mobile
 │       ├── response.go        # Utility response
 │       ├── sanitize.go        # Utility sanitization
 │       └── validation.go      # Utility validation
@@ -161,17 +190,30 @@ docker run -d --name ujikom-backend -p 3006:8080 ujikom-api
 | `POST` | `/api/v1/user/logout`          | Logout user        |
 | `POST` | `/api/v1/user/refresh-token`   | Refresh JWT token  |
 
+### Attendance Endpoints (GPS Required)
+
+| Method | Endpoint                      | Deskripsi              |
+| ------ | ----------------------------- | ---------------------- |
+| `POST` | `/api/v1/attendance/checkin`  | Check-in dengan GPS    |
+| `POST` | `/api/v1/attendance/checkout` | Check-out dengan GPS   |
+| `GET`  | `/api/v1/attendance/today`    | Lihat absensi hari ini |
+| `GET`  | `/api/v1/attendance/history`  | Riwayat kehadiran      |
+| `GET`  | `/api/v1/attendance/stats`    | Statistik kehadiran    |
+
 ### Testing Endpoints
 
 | Method | Endpoint                | Deskripsi                        |
 | ------ | ----------------------- | -------------------------------- |
 | `GET`  | `/api/v1/testing/users` | Lihat semua user (opsional auth) |
 
-
 ## Security Features
 
 - **Password Hashing** - Menggunakan bcrypt
 - **JWT Authentication** - Token-based auth
+- **GPS Location Validation** - Validasi lokasi dalam radius sekolah
+- **Mobile Device Security** - Keamanan untuk aplikasi mobile
+- **Haversine Distance Calculation** - Perhitungan jarak GPS yang akurat
+- **Indonesia Territory Validation** - Validasi lokasi dalam wilayah Indonesia
 - **Input Validation** - Validasi input user
 - **CORS Enabled** - Cross-origin resource sharing
 - **Rate Limiting** - Pembatasan request
@@ -196,9 +238,11 @@ Project ini dibuat untuk mempelajari:
 2. **Web Development** - HTTP handling, middleware, routing
 3. **Database Integration** - MongoDB operations, ODM
 4. **Authentication** - JWT, password hashing, security
-5. **API Design** - RESTful principles, response format
-6. **DevOps** - Docker, deployment, monitoring
-7. **Best Practices** - Code structure, error handling, validation
+5. **GPS & Location Services** - Geolocation, distance calculation, navigation
+6. **Mobile API Development** - Mobile-first API design, device security
+7. **API Design** - RESTful principles, response format
+8. **DevOps** - Docker, deployment, monitoring
+9. **Best Practices** - Code structure, error handling, validation
 
 ## License
 
@@ -220,3 +264,52 @@ Project ini dibuat untuk keperluan pembelajaran dan bersifat open source.
 <p align="center">
   <strong>Happy Coding! 🚀</strong>
 </p>
+
+
+Security Infrastructure-based Wireless Network
+Cellular Network Security:
+	Validasi koneksi melalui jaringan hp
+	Deteksi jenis koneksi (4G/5G)
+	Enkripsi data saat transmisi via hp
+WLAN Security:
+	Validasi WiFi sekolah
+	Deteksi SSID sekolah yang authorized
+	WPA/WPA2 encryption support
+	Blocking akses dari WiFi publik/tidak dikenal
+	Virtual Private Networks (VPN):
+	Deteksi penggunaan VPN
+	Blocking atau warning jika ada VPN aktif
+	Secure tunnel untuk data transmission
+Mobile IP:
+	Tracking IP address perangkat
+	Validasi IP range sekolah
+	Geofencing berdasarkan IP location
+
+Mobile Sensors
+	GPS - untuk location tracking (paling cuma ini yang kepakek)
+	Accelerometer - deteksi gerakan/shake
+	Gyroscope - orientasi perangkat
+	Fingerprint/Face ID - biometric authentication (sama ini kalo mau)
+	Proximity sensor - deteksi jarak
+	Ambient light sensor - deteksi kondisi pencahayaan
+
+Navigasi GPS
+	Real-time location tracking
+	Geofencing untuk area sekolah
+	Distance calculation dari lokasi sekolah
+	Maps integration untuk menampilkan lokasi
+	Route tracking (perjalanan ke sekolah)
+
+Keamanan Perangkat
+Device Security:
+	Device fingerprinting (IMEI, device ID)
+	Root/Jailbreak detection
+	Screen recording/screenshot prevention
+	App tampering detection
+	Certificate pinning untuk API calls
+Authentication Security:
+	Multi-factor authentication
+	Biometric authentication
+	Token-based authentication (JWT)
+	Session management
+	Auto-logout setelah idle
