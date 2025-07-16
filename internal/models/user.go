@@ -8,7 +8,10 @@ import (
 
 type User struct {
 	ID        primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	NIS       string             `json:"nis,omitempty" bson:"nis,omitempty"`
 	Name      string             `json:"name" bson:"name"`
+	Kelas     string             `json:"kelas,omitempty" bson:"kelas,omitempty"`
+	Jurusan   string             `json:"jurusan,omitempty" bson:"jurusan,omitempty"`
 	Email     string             `json:"email" bson:"email"`
 	Password  string             `json:"-" bson:"password"`
 	Phone     string             `json:"phone,omitempty" bson:"phone,omitempty"`
@@ -24,16 +27,21 @@ type LoginRequest struct {
 }
 
 type RegisterRequest struct {
-	Name 			string `json:"name" validate:"required,min=2,max=100"`
-	Email 		string `json:"email" validate:"required,email"`
-	Password	string `json:"password" validate:"required,min=6"`
-	Phone   	string `json:"phone,omitempty" validate:"omitempty,min=10,max=15"`
+	NIS       string `json:"nis" validate:"required,min=3,max=20"`
+	Name      string `json:"name" validate:"required,min=2,max=100"`
+	Kelas     string `json:"kelas" validate:"required,min=1,max=50"`
+	Jurusan   string `json:"jurusan" validate:"required,min=2,max=100"`
+	Email     string `json:"email" validate:"required,email"`
+	Password  string `json:"password" validate:"required,min=6"`
+	Phone     string `json:"phone,omitempty" validate:"omitempty,min=10,max=15"`
 }
 
 type UpdateProfileRequest struct {
-	Name 		string `json:"name" validate:"required,min=2,max=100"`
-	Phone		string `json:"phone,omitempty" validate:"omitempty,min=10,max=15"`
-	Avatar	string `json:"avatar,omitempty" validate:"omitempty,url"`
+	Name     string `json:"name" validate:"required,min=2,max=100"`
+	Kelas    string `json:"kelas" validate:"required,min=1,max=50"`
+	Jurusan  string `json:"jurusan" validate:"required,min=2,max=100"`
+	Phone    string `json:"phone,omitempty" validate:"omitempty,min=10,max=15"`
+	Avatar   string `json:"avatar,omitempty" validate:"omitempty,url"`
 }
 
 type LoginResponse struct {
@@ -49,7 +57,10 @@ type ChangePasswordRequest struct {
 func (u *User) UserPublic() User {
 	return User{
 		ID:        u.ID,
+		NIS:       u.NIS,
 		Name:      u.Name,
+		Kelas:     u.Kelas,
+		Jurusan:   u.Jurusan,
 		Email:     u.Email,
 		Phone:     u.Phone,
 		Avatar:    u.Avatar,
