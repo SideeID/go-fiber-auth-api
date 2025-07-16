@@ -58,6 +58,12 @@ func (uc *UserController) UpdateProfile(c *fiber.Ctx) error {
 	if req.Name != "" {
 		updateDoc["name"] = req.Name
 	}
+	if req.Kelas != "" {
+		updateDoc["kelas"] = req.Kelas
+	}
+	if req.Jurusan != "" {
+		updateDoc["jurusan"] = req.Jurusan
+	}
 	if req.Phone != "" {
 		updateDoc["phone"] = req.Phone
 	}
