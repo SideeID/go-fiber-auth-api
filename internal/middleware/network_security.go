@@ -91,6 +91,7 @@ func isValidIPRange(ip string) bool {
 		"114.0.0.0/8",     
 		"202.0.0.0/8",     
 		"103.156.71.94",
+		"203.78.113.253",
 	}
 
 	clientIP := net.ParseIP(ip)

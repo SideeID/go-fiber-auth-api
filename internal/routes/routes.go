@@ -44,7 +44,7 @@ func Setup(app *fiber.App, db *mongo.Database) {
 
 	protected := api.Group("/user")
 	protected.Use(middleware.AuthMiddleware(db))
-	protected.Use(middleware.NetworkSecurityMiddleware())
+	// protected.Use(middleware.NetworkSecurityMiddleware())
 	protected.Use(middleware.NetworkInfoMiddleware())
 	
 	protected.Get("/profile", userController.GetProfile)
