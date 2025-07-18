@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"encoding/json"
 	"net"
 	"regexp"
 	"strconv"
@@ -33,13 +34,13 @@ func NetworkSecurityMiddleware() fiber.Handler {
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "Access denied: Invalid IP range")
 		}
 
-		if isVPNDetected(c) {
-			return utils.ErrorResponse(c, fiber.StatusForbidden, "Access denied: VPN usage detected")
-		}
+		// if isVPNDetected(c) {
+		// 	return utils.ErrorResponse(c, fiber.StatusForbidden, "Access denied: VPN usage detected")
+		// }
 
-		if !isValidNetworkType(c) {
-			return utils.ErrorResponse(c, fiber.StatusForbidden, "Access denied: Invalid network type")
-		}
+		// if !isValidNetworkType(c) {
+		// 	return utils.ErrorResponse(c, fiber.StatusForbidden, "Access denied: Invalid network type")
+		// }
 
 		if !isValidWiFiSSID(c) {
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "Access denied: Invalid WiFi network")
@@ -47,6 +48,10 @@ func NetworkSecurityMiddleware() fiber.Handler {
 
 		if !isValidCellularNetwork(c) {
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "Access denied: Insecure cellular network")
+		}
+
+		if isFakeGPSDetected(c) {
+			return utils.ErrorResponse(c, fiber.StatusForbidden, "Access denied: Fake GPS detected")
 		}
 
 		c.Set("X-Network-Security", "validated")
@@ -159,31 +164,27 @@ func isVPNDetected(c *fiber.Ctx) bool {
 }
 
 // Validasi tipe jaringan
-func isValidNetworkType(c *fiber.Ctx) bool {
-	networkType := c.Get("X-Network-Type")
-	
-	// if networkType == "" {
-	// 	return true
-	// }
+// func isValidNetworkType(c *fiber.Ctx) bool {
+// 	networkType := c.Get("X-Network-Type")
 
-	allowedTypes := []string{
-		"wifi",
-		"cellular",
-		"4g",
-		"5g",
-		"lte",
-		"ethernet",
-	}
+// 	allowedTypes := []string{
+// 		"wifi",
+// 		"cellular",
+// 		"4g",
+// 		"5g",
+// 		"lte",
+// 		"ethernet",
+// 	}
 
-	networkType = strings.ToLower(networkType)
-	for _, allowed := range allowedTypes {
-		if networkType == allowed {
-			return true
-		}
-	}
+// 	networkType = strings.ToLower(networkType)
+// 	for _, allowed := range allowedTypes {
+// 		if networkType == allowed {
+// 			return true
+// 		}
+// 	}
 
-	return false
-}
+// 	return false
+// }
 
 // Validasi SSID WiFi sekolah
 func isValidWiFiSSID(c *fiber.Ctx) bool {
@@ -274,6 +275,88 @@ func isSecureCellularNetwork(networkType string) bool {
 	}
 
 	return false
+}
+
+func isFakeGPSDetected(c *fiber.Ctx) bool {
+	body := c.Body()
+	if len(body) == 0 {
+		return false
+	}
+
+	var locationData struct {
+		Latitude  float64 `json:"latitude"`
+		Longitude float64 `json:"longitude"`
+	}
+
+	if err := json.Unmarshal(body, &locationData); err != nil {
+		return false
+	}
+
+	if isSuspiciousPrecision(locationData.Latitude, locationData.Longitude) {
+		return true
+	}
+
+	if hasUnrealisticPrecision(locationData.Latitude, locationData.Longitude) {
+		return true
+	}
+
+	mockHeaders := []string{
+		"X-Mock-Location",
+		"X-Fake-GPS",
+		"X-Location-Spoofed",
+	}
+
+	for _, header := range mockHeaders {
+		if c.Get(header) != "" {
+			return true
+		}
+	}
+
+	if accuracy := c.Get("X-GPS-Accuracy"); accuracy != "" {
+		if acc, err := strconv.ParseFloat(accuracy, 64); err == nil {
+			if acc == 0 || acc < 1 {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+func isSuspiciousPrecision(lat, lng float64) bool {
+	latPrecision := getDecimalPlaces(lat)
+	lngPrecision := getDecimalPlaces(lng)
+
+	if latPrecision > 10 || lngPrecision > 10 {
+		return true
+	}
+
+	if latPrecision > 12 || lngPrecision > 12 {
+		return true
+	}
+
+	return false
+}
+
+func hasUnrealisticPrecision(lat, lng float64) bool {
+	latStr := strconv.FormatFloat(lat, 'f', -1, 64)
+	lngStr := strconv.FormatFloat(lng, 'f', -1, 64)
+
+	if strings.Contains(latStr, "000") || strings.Contains(lngStr, "000") {
+		if getDecimalPlaces(lat) > 10 || getDecimalPlaces(lng) > 10 {
+			return true
+		}
+	}
+
+	return false
+}
+
+func getDecimalPlaces(num float64) int {
+	str := strconv.FormatFloat(num, 'f', -1, 64)
+	if dotIndex := strings.Index(str, "."); dotIndex != -1 {
+		return len(str) - dotIndex - 1
+	}
+	return 0
 }
 
 // Middleware untuk logging informasi jaringan

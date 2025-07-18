@@ -23,7 +23,7 @@ type LocationBounds struct {
 	West  float64 `json:"west"`
 }
 
-// menghitung jarak antara dua titik GPS menggunakan Haversine formula
+// menghitung jarak degan Haversine formula
 func CalculateDistance(lat1, lng1, lat2, lng2 float64) float64 {
 	const earthRadius = 6371 // km
 
@@ -38,23 +38,19 @@ func CalculateDistance(lat1, lng1, lat2, lng2 float64) float64 {
 	return earthRadius * c
 }
 
-// menghitung jarak dalam meter
 func CalculateDistanceInMeters(lat1, lng1, lat2, lng2 float64) float64 {
 	return CalculateDistance(lat1, lng1, lat2, lng2) * 1000
 }
 
-// mengecek apakah koordinat berada dalam radius tertentu
 func IsWithinRadius(centerLat, centerLng, pointLat, pointLng, radiusKm float64) bool {
 	distance := CalculateDistance(centerLat, centerLng, pointLat, pointLng)
 	return distance <= radiusKm
 }
 
-// validasi koordinat GPS
 func IsValidGPSCoordinate(lat, lng float64) bool {
 	return lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180
 }
 
-// mengecek apakah koordinat berada di Indonesia
 func IsInIndonesia(lat, lng float64) bool {
 	// Bounding box Indonesia (aproximate)
 	bounds := LocationBounds{
