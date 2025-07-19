@@ -64,7 +64,6 @@ func NetworkSecurityMiddleware() fiber.Handler {
 
 // Mendapatkan IP address client yang sebenarnya
 func getClientIP(c *fiber.Ctx) string {
-	// Cek header X-Forwarded-For
 	if xff := c.Get("X-Forwarded-For"); xff != "" {
 		ips := strings.Split(xff, ",")
 		if len(ips) > 0 {
@@ -72,7 +71,6 @@ func getClientIP(c *fiber.Ctx) string {
 		}
 	}
 
-	// Cek header X-Real-IP
 	if xri := c.Get("X-Real-IP"); xri != "" {
 		return xri
 	}
@@ -164,27 +162,27 @@ func isVPNDetected(c *fiber.Ctx) bool {
 }
 
 // Validasi tipe jaringan
-// func isValidNetworkType(c *fiber.Ctx) bool {
-// 	networkType := c.Get("X-Network-Type")
+func isValidNetworkType(c *fiber.Ctx) bool {
+	networkType := c.Get("X-Network-Type")
 
-// 	allowedTypes := []string{
-// 		"wifi",
-// 		"cellular",
-// 		"4g",
-// 		"5g",
-// 		"lte",
-// 		"ethernet",
-// 	}
+	allowedTypes := []string{
+		"wifi",
+		"cellular",
+		"4g",
+		"5g",
+		"lte",
+		"ethernet",
+	}
 
-// 	networkType = strings.ToLower(networkType)
-// 	for _, allowed := range allowedTypes {
-// 		if networkType == allowed {
-// 			return true
-// 		}
-// 	}
+	networkType = strings.ToLower(networkType)
+	for _, allowed := range allowedTypes {
+		if networkType == allowed {
+			return true
+		}
+	}
 
-// 	return false
-// }
+	return false
+}
 
 // Validasi SSID WiFi sekolah
 func isValidWiFiSSID(c *fiber.Ctx) bool {
@@ -195,13 +193,12 @@ func isValidWiFiSSID(c *fiber.Ctx) bool {
 	// }
 
 	allowedSSIDs := []string{
-		"SMK-NET",
-		"SEKOLAH-WIFI",
-		"UJIKOM-NET",
-		"STUDENT-NET",
-		"SCHOOL-NETWORK",
-		"PENDIDIKAN-NET",
-		"WIFI lemod parahh",
+		"JTI-3.01",
+		"JTI-3.02",
+		"JTI-3.03",
+		"JTI-3.04",
+		"JTI-3.05",
+		"anjay",
 	}
 
 	for _, allowed := range allowedSSIDs {
@@ -211,9 +208,7 @@ func isValidWiFiSSID(c *fiber.Ctx) bool {
 	}
 
 	schoolPatterns := []string{
-		`^SMK-.*`,
-		`^SEKOLAH-.*`,
-		`^PENDIDIKAN-.*`,
+		`^JTI-.*`,
 		`^UJIKOM-.*`,
 	}
 
